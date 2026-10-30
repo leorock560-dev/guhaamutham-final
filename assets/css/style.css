@@ -178,6 +178,7 @@ p {
 }
 
 .hd {
+  padding: 0px 20px;
   position: relative;
   background: var(--g);
   display: flex;
