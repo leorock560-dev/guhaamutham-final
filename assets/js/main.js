@@ -37,37 +37,52 @@ if (ft) {
 const it = $("#intro");
 
 if (it) {
-  const images = [...it.querySelectorAll(".is")];
+  const content = [...it.children].find(
+    (child) => child.classList.contains("is") && child.classList.contains("w"),
+  );
+  const slides = [...it.children].filter(
+    (child) => child.classList.contains("is") && !child.classList.contains("w"),
+  );
 
-  if (images.length) {
+  if (content) slides.push(content);
+  if (slides.length) {
     let current = 0;
     let timer;
-    let paused = false;
 
     const duration = 800; // Transition speed
     const interval = 1900; // Time between image changes
     const pause = 10000; // Pause after all images
 
-    // Prepare all four images
-    images.forEach((img, index) => {
-      img.style.position = "absolute";
-      img.style.inset = "0";
-      img.style.width = "100%";
-      img.style.height = "100%";
+    const slideTransform = (slide, direction) => {
+      if (slide === content) {
+        if (direction > 0) return "translateX(calc(100vw + 100%))";
+        if (direction < 0) return "translateX(calc(-100vw - 100%))";
+      }
+
+      return `translateX(${direction * 100}%)`;
+    };
+
+    // Prepare the background slides, followed by the content slide.
+    slides.forEach((img, index) => {
+      if (img !== content) {
+        img.style.position = "absolute";
+        img.style.inset = "0";
+        img.style.width = "100%";
+        img.style.height = "100%";
+      }
       img.style.transition = `transform ${duration}ms ease-in-out`;
-      img.style.transform =
-        index === 0 ? "translateX(0)" : "translateX(100%)";
+      img.style.transform = slideTransform(img, index === 0 ? 0 : 1);
       img.style.zIndex = index === 0 ? "2" : "1";
     });
 
     const rotate = () => {
-      const next = (current + 1) % images.length;
-      const outgoing = images[current];
-      const incoming = images[next];
+      const next = (current + 1) % slides.length;
+      const outgoing = slides[current];
+      const incoming = slides[next];
 
       // Incoming image starts on the right
       incoming.style.transition = "none";
-      incoming.style.transform = "translateX(100%)";
+      incoming.style.transform = slideTransform(incoming, 1);
       incoming.style.zIndex = "2";
 
       // Force the browser to apply the starting position
@@ -79,21 +94,15 @@ if (it) {
 
       // Both images move simultaneously, right to left
       requestAnimationFrame(() => {
-        outgoing.style.transform = "translateX(-100%)";
-        incoming.style.transform = "translateX(0)";
+        outgoing.style.transform = slideTransform(outgoing, -1);
+        incoming.style.transform = slideTransform(incoming, 0);
       });
 
       current = next;
 
-      // Pause after every image has been displayed
-      if (current === 0) {
-        clearTimeout(timer);
-        paused = true;
-
-        timer = setTimeout(() => {
-          paused = false;
-          timer = setTimeout(rotate, interval);
-        }, pause);
+      // Hold the content slide before returning to the first background.
+      if (current === slides.length - 1) {
+        timer = setTimeout(rotate, pause);
       } else {
         timer = setTimeout(rotate, interval);
       }
@@ -156,18 +165,70 @@ const fv = (f) => {
 };
 
 document.querySelectorAll("form[data-f]").forEach((f) => {
-  f.onsubmit = (e) => {
+  f.onsubmit = async (e) => {
     e.preventDefault();
-    const ok = f.querySelector(".ok");
-    if (!fv(f)) return ok.classList.remove("show");
 
-    const d = Object.fromEntries(new FormData(f));
-    const body = encodeURIComponent(Object.entries(d).map(([k, v]) => k + ": " + v).join("\n"));
-    ok.innerHTML = `Thank you, ${d.name.replace(/[<>&]/g, "")}. <b>Demo mode:</b> no server is connected yet, so your message has <b>not</b> been sent. To send it now, <a href="mailto:${EM}?subject=${encodeURIComponent(f.dataset.f)}&body=${body}" style="text-decoration:underline">open it in your email app</a>.`;
-    ok.classList.add("show");
-    ok.focus();
+    const ok = f.querySelector(".ok");
+    const btn = f.querySelector('button[type="submit"]');
+
+    if (!fv(f)) {
+      ok.classList.remove("show");
+      return;
+    }
+
+    const fields = Object.fromEntries(new FormData(f));
+
+    btn.disabled = true;
+    btn.textContent = "Sending...";
+    ok.classList.remove("show");
+    ok.textContent = "";
+
+    try {
+      const response = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          formType: f.dataset.f,
+          fields
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Submission failed.");
+      }
+
+      ok.textContent =
+        `Thank you, ${fields.name}. Your ${f.dataset.f.toLowerCase()} has been submitted successfully.`;
+
+      ok.classList.add("show");
+      ok.focus();
+
+      f.reset();
+
+    } catch (error) {
+      console.error("Form submission error:", error);
+
+      ok.textContent =
+        "Sorry, we couldn't send your submission. Please try again or contact us directly.";
+
+      ok.classList.add("show");
+      ok.focus();
+
+    } finally {
+      btn.disabled = false;
+
+      btn.textContent =
+        f.dataset.f === "Feedback"
+          ? "Submit Feedback"
+          : "Send Enquiry";
+    }
   };
 });
+
 
 const o = new URLSearchParams(location.search).get("oil");
 const ps = $("#prod");
