@@ -182,6 +182,8 @@ document.querySelectorAll("form[data-f]").forEach((f) => {
     btn.textContent = "Sending...";
     ok.classList.remove("show");
     ok.textContent = "";
+    let failureMessage =
+      "Sorry, we couldn't send your submission. Please try again or contact us directly.";
 
     try {
       const response = await fetch("/api/send-email", {
@@ -198,6 +200,9 @@ document.querySelectorAll("form[data-f]").forEach((f) => {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
+        if (typeof result.message === "string" && result.message.trim()) {
+          failureMessage = result.message;
+        }
         throw new Error(result.message || "Submission failed.");
       }
 
@@ -212,8 +217,11 @@ document.querySelectorAll("form[data-f]").forEach((f) => {
     } catch (error) {
       console.error("Form submission error:", error);
 
-      ok.textContent =
-        "Sorry, we couldn't send your submission. Please try again or contact us directly.";
+      ok.textContent = failureMessage + " ";
+      const contactLink = document.createElement("a");
+      contactLink.href = "mailto:info@guhaamutham.com";
+      contactLink.textContent = "Email us directly.";
+      ok.append(contactLink);
 
       ok.classList.add("show");
       ok.focus();
