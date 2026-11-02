@@ -1,116 +1,95 @@
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const FORM_TYPES = ["Business enquiry", "Feedback"];
+
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") {
-    res.setHeader("Allow", "POST");
     return res.status(405).json({
       success: false,
-      message: "Method not allowed",
+      message: "Method not allowed"
     });
   }
-
-  const { formType, fields } = req.body || {};
-  if (!FORM_TYPES.includes(formType)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid form type",
-    });
-  }
-
-  if (!fields || typeof fields !== "object" || Array.isArray(fields)) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid form data",
-    });
-  }
-
-  const allowedFields =
-    formType === "Business enquiry"
-      ? ["name", "email", "phone", "type", "product", "message"]
-      : ["name", "email", "category", "rating", "feedback"];
-  const values = Object.fromEntries(
-    allowedFields.map((key) => [
-      key,
-      typeof fields[key] === "string" ? fields[key].trim() : "",
-    ]),
-  );
-  const message = values.message || values.feedback;
-
-  if (
-    !values.name ||
-    values.name.length > 200 ||
-    !EMAIL_PATTERN.test(values.email) ||
-    values.email.length > 254 ||
-    (formType === "Business enquiry" && !values.phone) ||
-    !message ||
-    message.length > 10000
-  ) {
-    return res.status(400).json({
-      success: false,
-      message: "Please provide valid form details.",
-    });
-  }
-
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.error("Email API configuration error: RESEND_API_KEY is not set.");
-    return res.status(500).json({
-      success: false,
-      message: "Email service is not configured.",
-    });
-  }
-
-  const emailContent = Object.entries(values)
-    .filter(([, value]) => value)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join("\n");
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "GuhaAmutham Website <website@guhaamutham.com>",
-        to: ["leorock560@gmail.com"],
-        reply_to: values.email,
-        subject: `New ${formType} - GuhaAmutham Website`,
-        text: `New ${formType}\n\n${emailContent}\n\nSubmitted through www.guhaamutham.com`,
-      }),
-    });
+    const { formType, fields } = req.body || {};
 
-    const responseText = await response.text();
-    let result;
-    try {
-      result = JSON.parse(responseText);
-    } catch (error) {
-      console.error("Resend returned an invalid response:", response.status);
-      return res.status(502).json({
+    if (
+      !["Business enquiry", "Feedback"].includes(formType) ||
+      !fields ||
+      typeof fields !== "object" ||
+      Array.isArray(fields)
+    ) {
+      return res.status(400).json({
         success: false,
-        message: "Email delivery failed.",
+        message: "Invalid submission."
       });
     }
 
-    if (!response.ok) {
-      console.error("Resend error:", response.status, result.message);
+    const name = String(fields.name || "").trim();
+    const email = String(fields.email || "").trim();
+    const message = String(
+      fields.message || fields.feedback || ""
+    ).trim();
+
+    if (
+      !name ||
+      name.length > 100 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+      email.length > 254 ||
+      !message ||
+      message.length > 5000
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please check your submitted details."
+      });
+    }
+
+    const details = Object.entries(fields)
+      .map(([key, value]) => {
+        return `${key}: ${String(value).slice(0, 5000)}`;
+      })
+      .join("\n");
+
+    const { data, error } = await resend.emails.send({
+      from: "GuhaAmutham Website <website@guhaamutham.com>",
+      to: ["info@guhaamutham.com"],
+      replyTo: email,
+      subject: `New ${formType} - GuhaAmutham`,
+      text: `
+GUHAAMUTHAM WEBSITE
+${formType.toUpperCase()}
+
+--------------------------------
+
+${details}
+
+--------------------------------
+Submitted through www.guhaamutham.com
+      `
+    });
+
+    if (error) {
+      console.error("Resend error:", error);
+
       return res.status(502).json({
         success: false,
-        message: "Email delivery failed.",
+        message: "Unable to send your email."
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Your submission has been received.",
+      message: "Submission received."
     });
+
   } catch (error) {
-    console.error("Email API error:", error);
-    return res.status(502).json({
+    console.error("API error:", error);
+
+    return res.status(500).json({
       success: false,
-      message: "Email delivery failed.",
+      message: "Something went wrong."
     });
   }
 };
