@@ -9,6 +9,7 @@ const N = [
 ];
 
 const PH = "+91 94875 58918";
+const Ph = "04224814757  ";
 const EM = "info@guhaamutham.com";
 const AD = "132/1, Cooperative Street, Vilankurichi, Coimbatore – 641035, Tamil Nadu, India.";
 
@@ -30,7 +31,7 @@ if (hd) {
 const ft = $("#ft");
 if (ft) {
   const footerNumbers = (value) => value.replace(/\d+/g, '<span class="ft-num">$&</span>');
-  ft.innerHTML = `<footer class="ft"><div class="w"><div class="fg"><div><a class="logo" href="home.html"><img src="assets/images/logo-1.png" height="60px">  <img src="assets/images/logo-2 (2).png" height="60px"></a><br><p>Traditional edible oils crafted for everyday Indian cooking — inspired by heritage, made with care.</p></div><div><h4>EXPLORE</h4><ul>${N.map((n) => `<li><a href="${n[1]}">${n[2]}</a></li>`).join("")}</ul></div><div><h4>CONTACT</h4><ul><li><a href="https://www.guhaamutham.com">www.guhaamutham.com</a></li><li><a href="mailto:${EM}">${EM}</a></li><li><a href="tel:+919487558918">${footerNumbers(PH)}</a></li><li style="opacity:.75">${footerNumbers(AD)}</li></ul></div></div><div class="fb"><span>© ${footerNumbers(String(new Date().getFullYear()))} GuhaAmutham LLP. All rights reserved.</span><span>TRADITIONAL PURITY · IN EVERY DROP.</span></div></div></footer>`;
+  ft.innerHTML = `<footer class="ft"><div class="w"><div class="fg"><div><a class="logo" href="home.html"><img src="assets/images/logo-1.png" height="60px">  <img src="assets/images/logo-2 (2).png" height="60px"></a><br><p>Traditional edible oils crafted for everyday Indian cooking — inspired by heritage, made with care.</p></div><div><h4>EXPLORE</h4><ul>${N.map((n) => `<li><a href="${n[1]}">${n[2]}</a></li>`).join("")}</ul></div><div><h4>CONTACT</h4><ul><li><a href="https://www.guhaamutham.com">www.guhaamutham.com</a></li><li><a href="mailto:${EM}">${EM}</a></li><li><a href="tel:04224814757"><i class="fas fa-phone" style="color:#AA7C20;"></i>  ${footerNumbers(Ph)} <span  class="contact-phone">Landline</span></a></li><li><a href="tel:+919487558918"> <i class="fas fa-mobile-alt" style="color:#AA7C20;"></i>  ${footerNumbers(PH)}</a></li><li style="opacity:.75">${footerNumbers(AD)}</li></ul></div></div><div class="fb"><span>© ${footerNumbers(String(new Date().getFullYear()))} GuhaAmutham LLP. All rights reserved.</span><span>TRADITIONAL PURITY · IN EVERY DROP.</span></div></div></footer>`;
 }
 
 const it = $("#intro");
