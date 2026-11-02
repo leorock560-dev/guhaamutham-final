@@ -9,6 +9,7 @@ module.exports = async (req, res) => {
       success: false,
       message: "Method not allowed"
     });
+    
   }
 
   try {
