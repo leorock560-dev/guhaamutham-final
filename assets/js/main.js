@@ -15,7 +15,7 @@ const FORMSPREE_ENDPOINTS = {
   "Business enquiry": "https://formspree.io/f/mqppgydo",
   Feedback: "https://formspree.io/f/myeebndr"
 };
-const AD = "132/1, Cooperative Street, Vilankurichi, Coimbatore – 641035, Tamil Nadu, India.";
+const AD = "132/1, Coperative Street, Vilankurichi, Coimbatore – 641035, Tamil Nadu, India.";
 
 const hd = $("#hd");
 if (hd) {
