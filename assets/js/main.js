@@ -11,6 +11,10 @@ const N = [
 const PH = "+91 94875 58918";
 const Ph = "04224814757  ";
 const EM = "info@guhaamutham.com";
+const FORMSPREE_ENDPOINTS = {
+  "Business enquiry": "https://formspree.io/f/mqppgydo",
+  Feedback: "https://formspree.io/f/myeebndr"
+};
 const AD = "132/1, Cooperative Street, Vilankurichi, Coimbatore – 641035, Tamil Nadu, India.";
 
 const hd = $("#hd");
@@ -164,6 +168,45 @@ const fv = (f) => {
   return good;
 };
 
+const submitToFormspree = async (form) => {
+  const endpoint = FORMSPREE_ENDPOINTS[form.dataset.f];
+  if (!/^https:\/\/formspree\.io\/f\/[A-Za-z0-9]+$/.test(endpoint || "")) {
+    throw new Error("The form hasn't been connected to Formspree yet.");
+  }
+
+  const formData = new FormData(form);
+  formData.append("formType", form.dataset.f);
+  formData.append("_subject", `New ${form.dataset.f} - GuhaAmutham`);
+
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: { Accept: "application/json" },
+    body: formData
+  });
+  const responseText = await response.text();
+  let result;
+
+  try {
+    result = responseText ? JSON.parse(responseText) : null;
+  } catch {
+    result = null;
+  }
+
+  if (!response.ok) {
+    const message = result?.errors
+      ?.map((item) => item.message)
+      .filter(Boolean)
+      .join(" ");
+    throw new Error(
+      message || result?.error || `Formspree couldn't accept the submission (HTTP ${response.status}).`
+    );
+  }
+
+  if (!result || result.ok === false) {
+    throw new Error("Formspree returned an invalid response. Please try again.");
+  }
+};
+
 document.querySelectorAll("form[data-f]").forEach((f) => {
   f.onsubmit = async (e) => {
     e.preventDefault();
@@ -177,62 +220,35 @@ document.querySelectorAll("form[data-f]").forEach((f) => {
     }
 
     const fields = Object.fromEntries(new FormData(f));
-
     btn.disabled = true;
     btn.textContent = "Sending...";
     ok.classList.remove("show");
     ok.textContent = "";
-    let failureMessage =
-      "Sorry, we couldn't send your submission. Please try again or contact us directly.";
 
     try {
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          formType: f.dataset.f,
-          fields
-        })
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        if (typeof result.message === "string" && result.message.trim()) {
-          failureMessage = result.message;
-        }
-        throw new Error(result.message || "Submission failed.");
-      }
+      await submitToFormspree(f);
 
       ok.textContent =
-        `Thank you, ${fields.name}. Your ${f.dataset.f.toLowerCase()} has been submitted successfully.`;
-
+        `Thank you, ${fields.name}. Your ${f.dataset.f.toLowerCase()} has been sent successfully.`;
       ok.classList.add("show");
       ok.focus();
-
       f.reset();
-
     } catch (error) {
       console.error("Form submission error:", error);
-
-      ok.textContent = failureMessage + " ";
+      const message = error instanceof Error
+        ? error.message
+        : "We couldn't send your message.";
+      ok.textContent = `${message} Please try again or `;
       const contactLink = document.createElement("a");
-      contactLink.href = "mailto:info@guhaamutham.com";
-      contactLink.textContent = "Email us directly.";
-      ok.append(contactLink);
-
+      contactLink.href = `mailto:${EM}`;
+      contactLink.textContent = "email us directly";
+      ok.append(contactLink, ".");
       ok.classList.add("show");
       ok.focus();
-
     } finally {
       btn.disabled = false;
-
       btn.textContent =
-        f.dataset.f === "Feedback"
-          ? "Submit Feedback"
-          : "Send Enquiry";
+        f.dataset.f === "Feedback" ? "Submit Feedback" : "Send Enquiry";
     }
   };
 });
