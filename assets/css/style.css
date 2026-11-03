@@ -211,6 +211,22 @@ p {
   align-items: center;
 }
 
+.hd .logo img[src*="logo-1"] {
+  height: 56.25px;
+}
+
+.ft .logo img[src*="logo-1"] {
+  height: 75px;
+}
+
+.hd .logo-secondary {
+  height: 86.0625px;
+}
+
+.ft .logo-secondary {
+  height: 114.75px;
+}
+
 .logo b {
   display: block;
   font-weight: 400;
@@ -1239,7 +1255,11 @@ textarea.bad {
 
   .hd .logo img {
     width: auto;
-    height: clamp(24px, 5vw, 45px) !important;
+    height: clamp(30px, 6.25vw, 56.25px) !important;
+  }
+
+  .hd .logo .logo-secondary {
+    height: clamp(45.9px, 9.5625vw, 86.0625px) !important;
   }
 
   .hd .mb {
@@ -2955,7 +2975,10 @@ textarea.bad {
 }
 
 @media (max-width: 350px) {
-  img[src*="logo-1"],
+  img[src*="logo-1"] {
+    height: 43.75px !important;
+  }
+
   img[src*="logo-2"] {
     height: 35px !important;
   }
@@ -2963,13 +2986,21 @@ textarea.bad {
 
 @media (min-width: 351px) and (max-width: 1000px) {
   .ft .logo img {
-    height: 45px !important;
+    height: 56.25px !important;
+  }
+
+  .ft .logo .logo-secondary {
+    height: 86.0625px !important;
   }
 }
 
 @media (max-width: 350px) {
   .ft .logo img {
-    height: 35px !important;
+    height: 43.75px !important;
+  }
+
+  .ft .logo .logo-secondary {
+    height: 66.9375px !important;
   }
 }
 
