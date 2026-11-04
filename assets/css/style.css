@@ -220,11 +220,11 @@ p {
 }
 
 .hd .logo-secondary {
-  height: 86.0625px;
+  height: 73.153125px;
 }
 
 .ft .logo-secondary {
-  height: 114.75px;
+  height: 97.5375px;
 }
 
 .logo b {
@@ -1259,7 +1259,7 @@ textarea.bad {
   }
 
   .hd .logo .logo-secondary {
-    height: clamp(45.9px, 9.5625vw, 86.0625px) !important;
+    height: clamp(39.015px, 8.128125vw, 73.153125px) !important;
   }
 
   .hd .mb {
@@ -2980,7 +2980,7 @@ textarea.bad {
   }
 
   img[src*="logo-2"] {
-    height: 35px !important;
+    height: 29.75px !important;
   }
 }
 
@@ -2990,7 +2990,7 @@ textarea.bad {
   }
 
   .ft .logo .logo-secondary {
-    height: 86.0625px !important;
+    height: 73.153125px !important;
   }
 }
 
@@ -3000,7 +3000,7 @@ textarea.bad {
   }
 
   .ft .logo .logo-secondary {
-    height: 66.9375px !important;
+    height: 56.896875px !important;
   }
 }
 
